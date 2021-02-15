@@ -2,6 +2,7 @@ package br.com.bmo.dao;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,8 +12,10 @@ public class TestSelect {
 		ConnectionFactory connFactory = new ConnectionFactory();
 		Connection conn = connFactory.getConnection();
 		
-		Statement stmt = conn.createStatement();
-		boolean result = stmt.execute("SELECT * FROM product");
+		String sql = "SELECT * FROM product";
+		
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		boolean result = stmt.execute();
 		
 		System.out.println("query executed? " + result);
 		
