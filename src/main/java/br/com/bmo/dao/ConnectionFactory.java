@@ -10,6 +10,8 @@ public class ConnectionFactory {
 	public DataSource dataSource;
 	
 	public ConnectionFactory() {
+		
+		// using C3P0 
 		ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource();
 		comboPooledDataSource.setJdbcUrl("jdbc:mysql://localhost/online_store?userTimezone=true&serverTimezone=UTC");
 		comboPooledDataSource.setUser("root");

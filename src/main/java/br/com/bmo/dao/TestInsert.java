@@ -1,54 +1,20 @@
 package br.com.bmo.dao;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
+
+import br.com.bmo.model.Product;
 
 public class TestInsert {
 	public static void main(String[] args) throws SQLException {
 
 		ConnectionFactory connFactory = new ConnectionFactory();
-		// try-with-resources
-		try (Connection conn = connFactory.getConnection()) {
-
-			conn.setAutoCommit(false);
-			String sql = "INSERT INTO product (name, description, price) VALUES (?, ?, ?)";
-
-			try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-
-				setSqlValues("KEYBOARD", "bluetooth wireless", BigDecimal.valueOf(50.0), stmt);
-				setSqlValues("DISPLAY", "lg display", BigDecimal.valueOf(400.0), stmt);
-
-				conn.commit();
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("ROLLBACK EXECUTED");
-				conn.rollback();
-			} 
-		}
-	}
-
-	private static void setSqlValues(String name, String description, BigDecimal price, PreparedStatement stmt)
-			throws SQLException {
-		stmt.setString(1, name);
-		stmt.setString(2, description);
-		stmt.setBigDecimal(3, price);
-
-		if (name.equals("DISPLAY")) {
-			throw new RuntimeException("Display cannot be inserted");
-		}
-
-		stmt.execute();
-
-		try (ResultSet rst = stmt.getGeneratedKeys()) {
-			while (rst.next()) {
-				Integer id = rst.getInt(1);
-				System.out.println("product created - id: " + id);
-			}			
-		}
-
+		ProductDAO productDAO = new ProductDAO(connFactory.getConnection());
+		productDAO.save(new Product("WEBCAM", "1040p resolution", BigDecimal.valueOf(240.0)));
+		
+		List<Product> products = productDAO.getList();
+		products.stream().forEach(product -> System.out.println(product));
+		
 	}
 }
