@@ -20,17 +20,19 @@ public class ProductDAO {
 		this.connection = connection;
 	}
 
-	public void save(Product product) throws SQLException {
+	public void save(Product product) {
 
-		connection.setAutoCommit(false);
-		String sql = "INSERT INTO product (name, description, price) VALUES (?, ?, ?)";
+		String sql = "INSERT INTO product (name, description, price, category_id) VALUES (?, ?, ?, ?)";
 
 		// try-with-resources
 		try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+			connection.setAutoCommit(false);
+			
 			stmt.setString(1, product.getName());
 			stmt.setString(2, product.getDescription());
 			stmt.setBigDecimal(3, product.getPrice());
+			stmt.setInt(4, product.getCategory().getId());
 			stmt.execute();
 			
 			connection.commit();
@@ -42,15 +44,20 @@ public class ProductDAO {
 				}
 			}
 
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("ROLLBACK EXECUTED");
-			connection.rollback();
+			try {
+				System.out.println("ROLLBACK EXECUTED");
+				connection.rollback();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 	}
 	
-	public List<Product> getList() throws SQLException {
+	public List<Product> getList() {
 		List<Product> products = new ArrayList<Product>();
 		
 		String sql = "SELECT P.id, P.name, P.description, P.price, C.id, C.name FROM product P"
@@ -71,9 +78,38 @@ public class ProductDAO {
 					products.add(currentProduct);
 				}
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		
 		return products;
+	}
+	
+	public Product selectBy(Integer id) {
+		
+		Product product = null;
+		
+		String sql = "SELECT P.id, P.name, P.description, P.price, C.id, C.name FROM product P"
+				+ " INNER JOIN category C on (P.category_id = C.id)"
+				+ " WHERE P.id = ?";
+		
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, id);
+			pstmt.execute();
+			
+			ResultSet rst = pstmt.getResultSet();
+			while (rst.next()) {
+				Category currentCategory = new Category(rst.getInt(5), rst.getString(6));
+				product = new Product(rst.getInt(1), rst.getString(2), rst.getString(3), rst.getBigDecimal(4), currentCategory);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+		
+		return product;
 	}
 
 	public List<Product> selectBy(Category category) throws SQLException {
@@ -94,5 +130,27 @@ public class ProductDAO {
 		}
 		
 		return products;
+	}
+	
+	public void delete(Product product) {
+		String sql = "DELETE FROM product WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, product.getId());
+			pstmt.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void update(Product product) throws SQLException {
+		String sql = "UPDATE product SET name = ?, description = ?, price = ?, category_id = ? WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setString(1, product.getName());
+			pstmt.setString(2, product.getDescription());
+			pstmt.setBigDecimal(3, product.getPrice());
+			pstmt.setInt(4, product.getCategory().getId());
+			pstmt.execute();
+		}
 	}
 }

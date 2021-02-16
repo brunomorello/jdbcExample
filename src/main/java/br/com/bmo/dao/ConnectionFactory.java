@@ -22,11 +22,15 @@ public class ConnectionFactory {
 		this.dataSource = comboPooledDataSource;
 	}
 
-	public Connection getConnection() throws SQLException {
+	public Connection getConnection()  {
 		
 		// 1 - sudo docker run --name mysql_localhost -e MYSQL_ROOT_PASSWORD=dqm50vnc -p 3306:3306 -d mysql:8.0.18
 		// 2 - sudo docker start mysql_localhost
 		// 3 - sudo docker exec -it mysql_localhost bash	
-		return this.dataSource.getConnection();
+		try {
+			return this.dataSource.getConnection();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

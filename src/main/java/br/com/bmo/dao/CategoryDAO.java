@@ -17,7 +17,7 @@ public class CategoryDAO {
 		this.connection = connection;
 	}
 	
-	public List<Category> getList() throws SQLException {
+	public List<Category> getList() {
 		List<Category> categories = new ArrayList<>();
 		
 		String sql = "SELECT id, name FROM category";
@@ -30,6 +30,9 @@ public class CategoryDAO {
 				Category currentCategory = new Category(rst.getInt(1), rst.getString(2));
 				categories.add(currentCategory);
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 		
 		return categories;
