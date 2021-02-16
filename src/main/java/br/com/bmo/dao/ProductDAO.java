@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.bmo.model.Category;
 import br.com.bmo.model.Product;
 
 public class ProductDAO {
@@ -52,20 +53,43 @@ public class ProductDAO {
 	public List<Product> getList() throws SQLException {
 		List<Product> products = new ArrayList<Product>();
 		
-		String sql = "SELECT id, name, description, price FROM product";
+		String sql = "SELECT P.id, P.name, P.description, P.price, C.id, C.name FROM product P"
+				+ " INNER JOIN category as C ON (C.id = P.category_id)";
 		
 		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 			pstmt.execute();
 			
 			try (ResultSet rst = pstmt.getResultSet()) {
 				while (rst.next()) {
+					Category currentCategory = new Category(rst.getInt(5), rst.getString(6));
 					Product currentProduct = new Product(rst.getInt(1),
 							rst.getString(2),
 							rst.getString(3), 
-							BigDecimal.valueOf(rst.getDouble(4)));
+							BigDecimal.valueOf(rst.getDouble(4)),
+							currentCategory);
 					
 					products.add(currentProduct);
 				}
+			}
+		}
+		
+		return products;
+	}
+
+	public List<Product> selectBy(Category category) throws SQLException {
+		List<Product> products = new ArrayList<>();
+		
+		String sql = "SELECT id, name, description, price "
+				+ "FROM product WHERE category_id = ?";
+		
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, category.getId());
+			pstmt.execute();
+			
+			ResultSet rst = pstmt.getResultSet();
+			while (rst.next()) {
+				Product currentProduct = new Product(rst.getInt(1), rst.getString(2), rst.getString(3), rst.getBigDecimal(4), category);
+				products.add(currentProduct);
 			}
 		}
 		
